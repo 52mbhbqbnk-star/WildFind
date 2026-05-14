@@ -7,7 +7,7 @@ export default async function handler(req, res) {
     const textPart = messages[0].content[1];
 
     const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${process.env.GEMINI_API_KEY}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${process.env.GEMINI_API_KEY}`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -25,8 +25,7 @@ export default async function handler(req, res) {
     );
 
     const data = await response.json();
-    
-    // Return full Gemini response so we can see what's happening
+
     if (!data.candidates?.[0]?.content?.parts?.[0]?.text) {
       return res.status(200).json({ error: { message: "Gemini raw: " + JSON.stringify(data).slice(0, 300) } });
     }
