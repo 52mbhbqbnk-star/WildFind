@@ -15,7 +15,8 @@ export default async function handler(req, res) {
           contents: [{
             parts: [
               { inline_data: { mime_type: imagePart.source.media_type, data: imagePart.source.data } },
-              { text: textPart.text + " Your entire response must be only a valid JSON object, nothing else." }
+              { text: `You are a wildlife expert. Identify what is in this photo. Respond ONLY with this exact JSON structure, no markdown, no extra text:
+{"name":"common name here","scientificName":"scientific name here","category":"Bird or Mammal or Reptile or Amphibian or Fish or Insect or Plant or Fungus or Marine or Other","description":"2-3 sentences about this species","conservationStatus":"Least Concern or Vulnerable or Endangered or Unknown","confidence":"High or Medium or Low"}` }
             ]
           }],
           generationConfig: { temperature: 0.1 }
@@ -24,11 +25,10 @@ export default async function handler(req, res) {
     );
 
     const data = await response.json();
-    const text = data.candidates?.[0]?.content?.parts?.[0]?.text || "{}";
-    const stripped = text.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/, "").trim();
-    const s = stripped.indexOf("{"), e = stripped.lastIndexOf("}");
-    const json = s !== -1 && e !== -1 ? stripped.slice(s, e + 1) : "{}";
-    const parsed = JSON.parse(json);
+    const text = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
+    const s = text.indexOf("{"), e = text.lastIndexOf("}");
+    if (s === -1 || e === -1) throw new Error("No JSON in response: " + text.slice(0, 200));
+    const parsed = JSON.parse(text.slice(s, e + 1));
     res.status(200).json({ content: [{ text: JSON.stringify(parsed) }] });
   } catch (err) {
     res.status(500).json({ error: { message: err.message } });
