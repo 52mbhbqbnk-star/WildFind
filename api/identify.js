@@ -25,9 +25,15 @@ export default async function handler(req, res) {
     );
 
     const data = await response.json();
-    const text = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
+    
+    // Return full Gemini response so we can see what's happening
+    if (!data.candidates?.[0]?.content?.parts?.[0]?.text) {
+      return res.status(200).json({ error: { message: "Gemini raw: " + JSON.stringify(data).slice(0, 300) } });
+    }
+
+    const text = data.candidates[0].content.parts[0].text;
     const s = text.indexOf("{"), e = text.lastIndexOf("}");
-    if (s === -1 || e === -1) throw new Error("No JSON in response: " + text.slice(0, 200));
+    if (s === -1 || e === -1) throw new Error("No JSON in: " + text.slice(0, 200));
     const parsed = JSON.parse(text.slice(s, e + 1));
     res.status(200).json({ content: [{ text: JSON.stringify(parsed) }] });
   } catch (err) {
